@@ -6,6 +6,9 @@
 routing: http/net
 db: bun, postgressql, goose
 blockchain: geth
+logging & mornitoring: zerolog(golang)
+    stage 0 : gcp, aws native logging service
+    stage 1 : promtail + logi + grafana (self-hosted)
 
 ## project structure : with go workspace
 module:server
