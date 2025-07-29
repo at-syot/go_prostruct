@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/simt/dtacc"
+	"github.com/simt/stdx/httpx"
 )
 
 func main() {
@@ -52,16 +53,7 @@ func NewXServer() *XServer {
 	// 	w.Write([]byte("this is api/v1 root uri"))
 	// })
 
-	// work around how to chain middleware
-	wrappedRoutes := []Route{
-		{pattern: "/protected", handler: func(w http.ResponseWriter, r *http.Request) {
-			w.Write([]byte("protected"))
-		}},
-		{pattern: "/dashboard", handler: func(w http.ResponseWriter, r *http.Request) {
-			w.Write([]byte("dashboard"))
-		}},
-	}
-	RegisterRoutes(apiMux, NewMiddlewares(firstMidleware, logginMiddleware), wrappedRoutes)
+	registerProtectedRoutes(s)
 
 	s.Handle("/api/v1/", http.StripPrefix("/api/v1", apiMux))
 
@@ -69,38 +61,17 @@ func NewXServer() *XServer {
 	return &XServer{serv}
 }
 
-// ######
-type MiddlewareChain struct {
-	middlewares []func(http.Handler) http.Handler
-}
-
-func NewMiddlewares(mws ...func(http.Handler) http.Handler) *MiddlewareChain {
-	return &MiddlewareChain{mws}
-}
-
-func (c *MiddlewareChain) Handle(h http.Handler) http.Handler {
-	for i := len(c.middlewares) - 1; i >= 0; i-- {
-		h = c.middlewares[i](h)
+func registerProtectedRoutes(s *http.ServeMux) {
+	// work around how to chain middleware
+	wrappedRoutes := []httpx.Route{
+		{Pattern: "/protected", Handler: func(w http.ResponseWriter, r *http.Request) {
+			w.Write([]byte("protected"))
+		}},
+		{Pattern: "/dashboard", Handler: func(w http.ResponseWriter, r *http.Request) {
+			w.Write([]byte("dashboard"))
+		}},
 	}
-	return h
-}
-
-func (c *MiddlewareChain) Append(mws ...func(http.Handler) http.Handler) {
-	c.middlewares = append(c.middlewares, mws...)
-}
-
-// #######
-
-// ##### grouping routes with wrapped middlewares
-type Route struct {
-	pattern string
-	handler http.HandlerFunc
-}
-
-func RegisterRoutes(s *http.ServeMux, composer *MiddlewareChain, routes []Route) {
-	for _, r := range routes {
-		s.Handle(r.pattern, composer.Handle(r.handler))
-	}
+	httpx.RegisterRoutes(s, httpx.NewMiddlewares(firstMidleware, logginMiddleware), wrappedRoutes)
 }
 
 // #####
@@ -119,12 +90,6 @@ func firstMidleware(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r)
 		log.Println("after:first middleware")
 	})
-}
-
-func test() http.Handler {
-	h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { log.Println("ok") })
-	mws := NewMiddlewares(firstMidleware, logginMiddleware)
-	return mws.Handle(h)
 }
 
 func (s *XServer) Listen() {

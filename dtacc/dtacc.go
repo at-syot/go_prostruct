@@ -1,7 +1,10 @@
 package dtacc
 
 import (
+	"context"
 	"database/sql"
+
+	"github.com/simt/dtacc/model"
 	_ "github.com/simt/dtacc/model"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect/sqlitedialect"
@@ -21,8 +24,18 @@ func NewDB() (*bun.DB, error) {
 		bundebug.FromEnv("BUNDEBUG"),
 	))
 
-	// migrate
-	// db.NewCreateTable().Model((*model.User)(nil)).Exec()
+	if err := tempMigrate(db); err != nil {
+		return nil, err
+	}
 
 	return db, nil
+}
+
+func tempMigrate(db *bun.DB) error {
+	ctx := context.Background()
+	if _, err := db.NewCreateTable().Model((*model.User)(nil)).Exec(ctx); err != nil {
+		return err
+	}
+
+	return nil
 }
