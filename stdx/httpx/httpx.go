@@ -2,25 +2,6 @@ package httpx
 
 import "net/http"
 
-type MiddlewareChain struct {
-	middlewares []func(http.Handler) http.Handler
-}
-
-func NewMiddlewares(mws ...func(http.Handler) http.Handler) *MiddlewareChain {
-	return &MiddlewareChain{mws}
-}
-
-func (c *MiddlewareChain) Handle(h http.Handler) http.Handler {
-	for i := len(c.middlewares) - 1; i >= 0; i-- {
-		h = c.middlewares[i](h)
-	}
-	return h
-}
-
-func (c *MiddlewareChain) Append(mws ...func(http.Handler) http.Handler) {
-	c.middlewares = append(c.middlewares, mws...)
-}
-
 // ##### grouping routes with wrapped middlewares
 type Route struct {
 	Pattern string

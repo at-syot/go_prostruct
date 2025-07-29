@@ -1,6 +1,9 @@
 # TODO:
 - use http/net instead: DONE
-- construct project structure: modular monolith, utilize go workspace
+- construct project structure: modular monolith, utilize go workspace:DONE
+- recovery, cors middleware: DOING
+- loading configulation from .env
+- env: dev, staging, prod
 
 ### Stack
 routing: http/net
@@ -33,7 +36,7 @@ module:auth
         service.go
         service_test.go
 
-module:stdx
+module:stdx -> pkgs
     /httpx
     /errorx
     /ciphers

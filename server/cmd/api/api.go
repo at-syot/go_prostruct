@@ -9,11 +9,14 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/rs/zerolog"
 	"github.com/simt/dtacc"
 	"github.com/simt/stdx/httpx"
 )
 
 func main() {
+	zerolog.SetGlobalLevel(zerolog.DebugLevel)
+
 	db, err := dtacc.NewDB()
 	if err != nil {
 		panic(err)
@@ -45,51 +48,29 @@ func NewXServer() *XServer {
 	})
 
 	apiMux := http.NewServeMux()
-	apiMux.HandleFunc("/register", func(w http.ResponseWriter, r *http.Request) { w.Write([]byte("regis")) })
-	apiMux.HandleFunc("/auth", func(w http.ResponseWriter, r *http.Request) { w.Write([]byte("auth")) })
-	apiMux.HandleFunc("/refresh-token", func(w http.ResponseWriter, r *http.Request) { w.Write([]byte("rt")) })
-	// apiMux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-	// 	log.Printf("api/v1 uri - %s %s", r.RequestURI, r.URL)
-	// 	w.Write([]byte("this is api/v1 root uri"))
-	// })
-
-	registerProtectedRoutes(s)
+	registerAuthRoutes(apiMux)
+	registerProtectedRoutes(apiMux)
 
 	s.Handle("/api/v1/", http.StripPrefix("/api/v1", apiMux))
 
-	serv := &http.Server{Addr: ":3000", Handler: s}
+	serv := &http.Server{Addr: ":3000", Handler: httpx.MakeDevMiddlewares().Handle(s)}
 	return &XServer{serv}
 }
 
+func registerAuthRoutes(s *http.ServeMux) {
+	s.HandleFunc("/register", func(w http.ResponseWriter, r *http.Request) { w.Write([]byte("regis")) })
+	s.HandleFunc("/auth", func(w http.ResponseWriter, r *http.Request) { w.Write([]byte("auth")) })
+	s.HandleFunc("/refresh-token", func(w http.ResponseWriter, r *http.Request) { w.Write([]byte("rt")) })
+}
+
 func registerProtectedRoutes(s *http.ServeMux) {
-	// work around how to chain middleware
+	protectedHandler := func(w http.ResponseWriter, r *http.Request) { w.Write([]byte("protected")) }
+	dashboardHandler := func(w http.ResponseWriter, r *http.Request) { w.Write([]byte("dashboard")) }
 	wrappedRoutes := []httpx.Route{
-		{Pattern: "/protected", Handler: func(w http.ResponseWriter, r *http.Request) {
-			w.Write([]byte("protected"))
-		}},
-		{Pattern: "/dashboard", Handler: func(w http.ResponseWriter, r *http.Request) {
-			w.Write([]byte("dashboard"))
-		}},
+		{Pattern: "GET /protected", Handler: protectedHandler},
+		{Pattern: "GET /dashboard", Handler: dashboardHandler},
 	}
-	httpx.RegisterRoutes(s, httpx.NewMiddlewares(firstMidleware, logginMiddleware), wrappedRoutes)
-}
-
-// #####
-
-func logginMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Println("before:loggingMiddleware")
-		next.ServeHTTP(w, r)
-		log.Println("after:loggingMiddleware")
-	})
-}
-
-func firstMidleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Println("before:first middleware")
-		next.ServeHTTP(w, r)
-		log.Println("after:first middleware")
-	})
+	httpx.RegisterRoutes(s, httpx.NewMiddlewareChain(), wrappedRoutes)
 }
 
 func (s *XServer) Listen() {
