@@ -1,4 +1,4 @@
-module github.com/simt/stdx
+module github.com/simt/pkg
 
 go 1.24.4
 

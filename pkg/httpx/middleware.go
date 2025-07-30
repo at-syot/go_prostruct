@@ -31,6 +31,10 @@ func (c *MiddlewareChain) Append(mws ...func(http.Handler) http.Handler) {
 	c.middlewares = append(c.middlewares, mws...)
 }
 
+func (c *MiddlewareChain) Merge(chain *MiddlewareChain) {
+	c.middlewares = append(c.middlewares, chain.middlewares...)
+}
+
 // @default DEV middlewares
 
 func Recovered(next http.Handler) http.Handler {
@@ -38,7 +42,6 @@ func Recovered(next http.Handler) http.Handler {
 		defer func() {
 			if r := recover(); r != nil {
 				log.Error().
-					Stack().
 					Any("panic", r).
 					Msg("recovered from panic")
 				WriteInternalErrResp(w)
@@ -55,6 +58,7 @@ func Logger(next http.Handler) http.Handler {
 
 		next.ServeHTTP(w, r)
 
+		// status, response raw json
 		log.Info().
 			Str("host", r.Host).
 			Str("method", r.Method).
@@ -69,6 +73,8 @@ func setDevLogger() {
 
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
 	zerolog.SetGlobalLevel(zerolog.DebugLevel)
+
+	// logger := zerolog.New(os.Stderr).With().Timestamp().Logger()
 }
 
 func MakeDevMiddlewares() *MiddlewareChain {

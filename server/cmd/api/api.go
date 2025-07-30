@@ -9,13 +9,14 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/rs/zerolog"
 	"github.com/simt/dtacc"
-	"github.com/simt/stdx/httpx"
+	"github.com/simt/pkg/httpx"
+	"github.com/simt/server/internal/config"
 )
 
 func main() {
-	zerolog.SetGlobalLevel(zerolog.DebugLevel)
+	// test loading config
+	log.Printf("app config: %v", config.AppConfigurations)
 
 	db, err := dtacc.NewDB()
 	if err != nil {
@@ -36,12 +37,13 @@ func main() {
 	}
 }
 
-type XServer struct {
-	serv *http.Server
+type AppServer struct {
+	serv                *http.Server
+	shutdownGracePeriod time.Duration
 }
 
 // register, auth, token, refresh, forgot-pw, reset-pw, logout
-func NewXServer() *XServer {
+func NewXServer() *AppServer {
 	s := http.NewServeMux()
 	s.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("server is running.."))
@@ -54,7 +56,8 @@ func NewXServer() *XServer {
 	s.Handle("/api/v1/", http.StripPrefix("/api/v1", apiMux))
 
 	serv := &http.Server{Addr: ":3000", Handler: httpx.MakeDevMiddlewares().Handle(s)}
-	return &XServer{serv}
+
+	return &AppServer{serv, 10 * time.Second}
 }
 
 func registerAuthRoutes(s *http.ServeMux) {
@@ -70,19 +73,19 @@ func registerProtectedRoutes(s *http.ServeMux) {
 		{Pattern: "GET /protected", Handler: protectedHandler},
 		{Pattern: "GET /dashboard", Handler: dashboardHandler},
 	}
-	httpx.RegisterRoutes(s, httpx.NewMiddlewareChain(), wrappedRoutes)
+	httpx.RegisterRoutes(s, httpx.MakeDevMiddlewares(), wrappedRoutes)
 }
 
-func (s *XServer) Listen() {
+func (s *AppServer) Listen() {
 	log.Printf("server is listening on - %s", s.serv.Addr)
 	if err := s.serv.ListenAndServe(); err != nil {
 		log.Print("server is closed")
 	}
 }
 
-func (s *XServer) Shutdown() error {
+func (s *AppServer) Shutdown() error {
 	ctx := context.Background()
-	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, s.shutdownGracePeriod)
 	defer cancel()
 
 	return s.serv.Shutdown(ctx)

@@ -1,8 +1,8 @@
 # TODO:
 - use http/net instead: DONE
 - construct project structure: modular monolith, utilize go workspace:DONE
-- recovery, cors middleware: DOING
-- loading configulation from .env
+- recovery, cors middleware: DONE 
+- loading configulation from .env: DOING
 - env: dev, staging, prod
 
 ### Stack
@@ -23,11 +23,14 @@ module:server
             migrate.go
     /server
         server.go // construct server, 
+    /config
+        config.go
     /internal
         /route
         /handler
         /service
         /repo
+        /config
 
 module:auth
     main.go // expose auth func
