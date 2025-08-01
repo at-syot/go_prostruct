@@ -2,6 +2,7 @@ package config
 
 import (
 	"os"
+	"path"
 	"strconv"
 	"time"
 
@@ -9,12 +10,10 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// load config : godotenv
-// config struct
-
 type (
 	ConfEnv        string
 	Configurations struct {
+		Port                string
 		Env                 ConfEnv
 		ShutdownGracePeriod time.Duration
 	}
@@ -29,8 +28,18 @@ const (
 var AppConfigurations Configurations
 
 func init() {
-	godotenv.Load()
+	// Explicitly declare env path,
+	// due to we run - air - from root of go workspace
+	// REMARK: maybe only when on @development
+	wd, _ := os.Getwd()
+	envPath := path.Join(wd, "/server/.env")
+	godotenv.Load(envPath)
+	log.Info().Msgf("load env from %s successful", envPath)
+
+	port := os.Getenv("PORT")
 	env := os.Getenv("ENV")
+	shutdownGracePeriod := os.Getenv("SHUTDOWN_GRACE_PERIOD")
+
 	var confEnv ConfEnv
 	switch env {
 	case "development":
@@ -41,18 +50,13 @@ func init() {
 		confEnv = ConfEnvProd
 	}
 
-	log.Info().Any("config:env", confEnv).Msg("")
-
-	shutdownGracePeriod := os.Getenv("SHUTDOWN_GRACE_PERIOD")
-
 	parsedShutdownGP, err := strconv.Atoi(shutdownGracePeriod)
 	if err != nil {
 		panic(err)
 	}
 
-	log.Info().Str("config:shutdownGracePeriod", shutdownGracePeriod).Msg("")
-
 	AppConfigurations = Configurations{
+		Port:                port,
 		Env:                 confEnv,
 		ShutdownGracePeriod: time.Second * time.Duration(parsedShutdownGP),
 	}

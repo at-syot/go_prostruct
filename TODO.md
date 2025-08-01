@@ -2,8 +2,13 @@
 - use http/net instead: DONE
 - construct project structure: modular monolith, utilize go workspace:DONE
 - recovery, cors middleware: DONE 
-- loading configulation from .env: DOING
-- env: dev, staging, prod
+- loading configulation from .env: DONE 
+- env: dev, staging, prod: DONE
+
+- integrate reflex for hot reload unit-test
+- authentication, authorization
+- caching
+- long running job (another module ?)
 
 ### Stack
 routing: http/net

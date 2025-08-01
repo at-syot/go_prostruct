@@ -16,8 +16,6 @@ import (
 )
 
 func main() {
-	// test loading config
-	log.Printf("app config: %v", config.AppConfigurations)
 	appEnv := config.AppConfigurations.Env
 	var loggerEnv logger.LogEnv
 	switch appEnv {
@@ -64,7 +62,6 @@ func NewXServer() *AppServer {
 	apiMux := http.NewServeMux()
 	registerAuthRoutes(apiMux)
 	registerProtectedRoutes(apiMux)
-
 	s.Handle("/api/v1/", http.StripPrefix("/api/v1", apiMux))
 
 	serv := &http.Server{Addr: ":3000", Handler: httpx.MakeDevMiddlewares().Handle(s)}
