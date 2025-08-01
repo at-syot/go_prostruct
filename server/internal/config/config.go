@@ -12,17 +12,36 @@ import (
 // load config : godotenv
 // config struct
 
-type Configurations struct {
-	Env                 string
-	ShutdownGracePeriod time.Duration
-}
+type (
+	ConfEnv        string
+	Configurations struct {
+		Env                 ConfEnv
+		ShutdownGracePeriod time.Duration
+	}
+)
+
+const (
+	ConfEnvDev     ConfEnv = "development"
+	ConfEnvStaging ConfEnv = "staging"
+	ConfEnvProd    ConfEnv = "production"
+)
 
 var AppConfigurations Configurations
 
 func init() {
 	godotenv.Load()
 	env := os.Getenv("ENV")
-	log.Info().Str("config:env", env).Msg("")
+	var confEnv ConfEnv
+	switch env {
+	case "development":
+		confEnv = ConfEnvDev
+	case "staging":
+		confEnv = ConfEnvStaging
+	case "production":
+		confEnv = ConfEnvProd
+	}
+
+	log.Info().Any("config:env", confEnv).Msg("")
 
 	shutdownGracePeriod := os.Getenv("SHUTDOWN_GRACE_PERIOD")
 
@@ -34,7 +53,7 @@ func init() {
 	log.Info().Str("config:shutdownGracePeriod", shutdownGracePeriod).Msg("")
 
 	AppConfigurations = Configurations{
-		Env:                 env,
+		Env:                 confEnv,
 		ShutdownGracePeriod: time.Second * time.Duration(parsedShutdownGP),
 	}
 

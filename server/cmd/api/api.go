@@ -11,12 +11,24 @@ import (
 
 	"github.com/simt/dtacc"
 	"github.com/simt/pkg/httpx"
+	"github.com/simt/pkg/logger"
 	"github.com/simt/server/internal/config"
 )
 
 func main() {
 	// test loading config
 	log.Printf("app config: %v", config.AppConfigurations)
+	appEnv := config.AppConfigurations.Env
+	var loggerEnv logger.LogEnv
+	switch appEnv {
+	case config.ConfEnvDev:
+		loggerEnv = logger.LogDev
+	case config.ConfEnvStaging:
+		loggerEnv = logger.LogStaging
+	case config.ConfEnvProd:
+		loggerEnv = logger.LogProd
+	}
+	logger.InitLogger(loggerEnv)
 
 	db, err := dtacc.NewDB()
 	if err != nil {

@@ -1,13 +1,10 @@
 package httpx
 
 import (
+	"github.com/rs/cors"
+	"github.com/rs/zerolog/log"
 	"net/http"
 	"time"
-
-	"github.com/rs/cors"
-
-	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 )
 
 type MiddlewareChain struct {
@@ -35,7 +32,11 @@ func (c *MiddlewareChain) Merge(chain *MiddlewareChain) {
 	c.middlewares = append(c.middlewares, chain.middlewares...)
 }
 
-// @default DEV middlewares
+// MakeDevMiddlewares create default middlewares
+// for development env
+func MakeDevMiddlewares() *MiddlewareChain {
+	return NewMiddlewareChain(Recovered, cors.AllowAll().Handler, Logger)
+}
 
 func Recovered(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -55,10 +56,9 @@ func Recovered(next http.Handler) http.Handler {
 func Logger(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
-
 		next.ServeHTTP(w, r)
 
-		// status, response raw json
+		//TODO: status, response raw json
 		log.Info().
 			Str("host", r.Host).
 			Str("method", r.Method).
@@ -66,19 +66,4 @@ func Logger(next http.Handler) http.Handler {
 			Dur("latency", time.Since(start)).
 			Msg("http request")
 	})
-}
-
-func setDevLogger() {
-	// LogLevel: DEV=debug, stagging=info, production=selective info or warning
-
-	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
-	zerolog.SetGlobalLevel(zerolog.DebugLevel)
-
-	// logger := zerolog.New(os.Stderr).With().Timestamp().Logger()
-}
-
-func MakeDevMiddlewares() *MiddlewareChain {
-	setDevLogger()
-
-	return NewMiddlewareChain(Recovered, cors.AllowAll().Handler, Logger)
 }
