@@ -5,10 +5,11 @@
 - recovery, cors middleware: DONE
 - loading configulation from .env: DONE
 - env: dev, staging, prod: DONE
-- integrate reflex for hot reload unit-test: DONE
+- containerlize development env, automate restart service: DONE
 - dtaccess, docker postgres: DONE
 
 - authentication, authorization
+
 - caching
 - long running job (another module ?)
 
