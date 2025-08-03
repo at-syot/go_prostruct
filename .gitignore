@@ -1,2 +1,4 @@
-server/.env
+.env
 server/tmp
+tmp/postgres_data/
+postgres_data

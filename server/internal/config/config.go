@@ -2,7 +2,6 @@ package config
 
 import (
 	"os"
-	"path"
 	"strconv"
 	"time"
 
@@ -16,6 +15,7 @@ type (
 		Port                string
 		Env                 ConfEnv
 		ShutdownGracePeriod time.Duration
+		DatabaseURL         string
 	}
 )
 
@@ -28,17 +28,33 @@ const (
 var AppConfigurations Configurations
 
 func init() {
-	// Explicitly declare env path,
-	// due to we run - air - from root of go workspace
-	// REMARK: maybe only when on @development
-	wd, _ := os.Getwd()
-	envPath := path.Join(wd, "/server/.env")
-	godotenv.Load(envPath)
-	log.Info().Msgf("load env from %s successful", envPath)
+	dir, err := os.Getwd()
+	if err != nil {
+		panic(err)
+	}
+	log.Info().Msgf("Current working directory: %s", dir)
+
+	if err := godotenv.Load(".env"); err != nil {
+		log.Warn().Err(err).Msg("could not load .env file")
+		panic(err)
+	}
 
 	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+
 	env := os.Getenv("ENV")
+	if env == "" {
+		env = "development"
+	}
+
 	shutdownGracePeriod := os.Getenv("SHUTDOWN_GRACE_PERIOD")
+	if shutdownGracePeriod == "" {
+		shutdownGracePeriod = "10"
+	}
+
+	databaseURL := os.Getenv("DATABASE_URL")
 
 	var confEnv ConfEnv
 	switch env {
@@ -48,17 +64,21 @@ func init() {
 		confEnv = ConfEnvStaging
 	case "production":
 		confEnv = ConfEnvProd
+	default:
+		confEnv = ConfEnvDev
 	}
 
 	parsedShutdownGP, err := strconv.Atoi(shutdownGracePeriod)
 	if err != nil {
-		panic(err)
+		log.Warn().Err(err).Msg("Invalid SHUTDOWN_GRACE_PERIOD, using default 10 seconds")
+		parsedShutdownGP = 10
 	}
 
 	AppConfigurations = Configurations{
 		Port:                port,
 		Env:                 confEnv,
 		ShutdownGracePeriod: time.Second * time.Duration(parsedShutdownGP),
+		DatabaseURL:         databaseURL,
 	}
 
 	log.Info().Msg("config is loaded")

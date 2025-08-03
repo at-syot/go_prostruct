@@ -2,13 +2,13 @@ package main
 
 import (
 	"context"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
+	"github.com/rs/zerolog"
 	"github.com/simt/dtacc"
 	"github.com/simt/pkg/httpx"
 	"github.com/simt/pkg/logger"
@@ -26,16 +26,16 @@ func main() {
 	case config.ConfEnvProd:
 		loggerEnv = logger.LogProd
 	}
-	logger.InitLogger(loggerEnv)
+	logg := logger.InitLogger(loggerEnv)
 
 	db, err := dtacc.NewDB()
 	if err != nil {
-		panic(err)
+		logg.Fatal().Err(err).Msg("failed to initialize database")
 	}
 
 	_ = db
 
-	s := NewXServer()
+	s := NewAppServer(logg)
 	go s.Listen()
 
 	sigCh := make(chan os.Signal, 1)
@@ -43,17 +43,17 @@ func main() {
 
 	<-sigCh
 	if err := s.Shutdown(); err != nil {
-		log.Fatalf("server shutdown err - %v", err)
+		logg.Fatal().Err(err).Msg("server shutdown error")
 	}
 }
 
 type AppServer struct {
 	serv                *http.Server
 	shutdownGracePeriod time.Duration
+	logger              zerolog.Logger
 }
 
-// register, auth, token, refresh, forgot-pw, reset-pw, logout
-func NewXServer() *AppServer {
+func NewAppServer(logg zerolog.Logger) *AppServer {
 	s := http.NewServeMux()
 	s.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("server is running.."))
@@ -64,11 +64,12 @@ func NewXServer() *AppServer {
 	registerProtectedRoutes(apiMux)
 	s.Handle("/api/v1/", http.StripPrefix("/api/v1", apiMux))
 
-	serv := &http.Server{Addr: ":3000", Handler: httpx.MakeDevMiddlewares().Handle(s)}
+	serv := &http.Server{Addr: ":" + config.AppConfigurations.Port, Handler: httpx.MakeDevMiddlewares().Handle(s)}
 
-	return &AppServer{serv, 10 * time.Second}
+	return &AppServer{serv, config.AppConfigurations.ShutdownGracePeriod, logg}
 }
 
+// register, auth, token, refresh, forgot-pw, reset-pw, logout
 func registerAuthRoutes(s *http.ServeMux) {
 	s.HandleFunc("/register", func(w http.ResponseWriter, r *http.Request) { w.Write([]byte("regis")) })
 	s.HandleFunc("/auth", func(w http.ResponseWriter, r *http.Request) { w.Write([]byte("auth")) })
@@ -86,9 +87,9 @@ func registerProtectedRoutes(s *http.ServeMux) {
 }
 
 func (s *AppServer) Listen() {
-	log.Printf("server is listening on - %s", s.serv.Addr)
+	s.logger.Info().Str("addr", s.serv.Addr).Msg("server is listening")
 	if err := s.serv.ListenAndServe(); err != nil {
-		log.Print("server is closed")
+		s.logger.Info().Msg("server is closed")
 	}
 }
 

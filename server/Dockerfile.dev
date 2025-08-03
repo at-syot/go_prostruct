@@ -1,0 +1,25 @@
+FROM golang:1.24-alpine
+
+# Install git (required for go install)
+RUN apk add --no-cache git
+
+# Set working directory
+WORKDIR /workspace
+
+# Install air for hot reload
+RUN go install github.com/air-verse/air@latest
+
+# Copy go mod files first
+COPY go.mod go.sum ./
+
+# Download dependencies
+RUN go mod download
+
+# Copy source code
+COPY . .
+
+# Expose port
+EXPOSE 8080
+
+# Default command (can be overridden by docker-compose)
+CMD ["go", "run", "./cmd/api/api.go"]

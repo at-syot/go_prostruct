@@ -1,6 +1,9 @@
 package logger
 
 import (
+	"io"
+	"os"
+
 	"github.com/rs/zerolog"
 )
 
@@ -12,11 +15,14 @@ const (
 	LogProd    LogEnv = "production"
 )
 
-func InitLogger(env LogEnv) {
+func InitLogger(env LogEnv) zerolog.Logger {
 	var logLevel zerolog.Level
+	var writer io.Writer = os.Stderr
+
 	switch env {
 	case LogDev:
 		logLevel = zerolog.DebugLevel
+		writer = zerolog.ConsoleWriter{Out: os.Stderr}
 	case LogStaging:
 		logLevel = zerolog.InfoLevel
 	case LogProd:
@@ -25,4 +31,6 @@ func InitLogger(env LogEnv) {
 
 	zerolog.SetGlobalLevel(logLevel)
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
+
+	return zerolog.New(writer).With().Timestamp().Logger()
 }
