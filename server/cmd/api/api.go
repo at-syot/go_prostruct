@@ -16,6 +16,7 @@ import (
 )
 
 func main() {
+	config.LoadConfig()
 	appEnv := config.AppConfigurations.Env
 	var loggerEnv logger.LogEnv
 	switch appEnv {
@@ -30,7 +31,7 @@ func main() {
 
 	db, err := dtacc.NewDB()
 	if err != nil {
-		logg.Fatal().Err(err).Msg("failed to initialize database")
+		logg.Fatal().Err(err).Msg("failed to initialize database.")
 	}
 
 	_ = db

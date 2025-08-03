@@ -27,13 +27,7 @@ const (
 
 var AppConfigurations Configurations
 
-func init() {
-	dir, err := os.Getwd()
-	if err != nil {
-		panic(err)
-	}
-	log.Info().Msgf("Current working directory: %s", dir)
-
+func LoadConfig() {
 	if err := godotenv.Load(".env"); err != nil {
 		log.Warn().Err(err).Msg("could not load .env file")
 		panic(err)
