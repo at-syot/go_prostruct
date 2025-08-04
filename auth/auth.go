@@ -33,5 +33,24 @@ func NewAuth(s *http.ServeMux, db *bun.DB) *Auth {
 func (a *Auth) RegisterHandlers() {
 	a.s.HandleFunc("/register", func(w http.ResponseWriter, r *http.Request) { w.Write([]byte("regis")) })
 	a.s.HandleFunc("/auth", func(w http.ResponseWriter, r *http.Request) { w.Write([]byte("auth")) })
-	a.s.HandleFunc("/refresh-token", func(w http.ResponseWriter, r *http.Request) { w.Write([]byte("rt")) })
+	a.s.HandleFunc("/token/refresh", func(w http.ResponseWriter, r *http.Request) { w.Write([]byte("rt")) })
+
+	// a.s.HandleFunc("/register", func(w http.ResponseWriter, r *http.Request) {
+	// 	w.Write([]byte("register endpoint"))
+	// })
+	// a.s.HandleFunc("/auth", func(w http.ResponseWriter, r *http.Request) {
+	// 	w.Write([]byte("auth endpoint"))
+	// })
+	// a.s.HandleFunc("/token/refresh", func(w http.ResponseWriter, r *http.Request) {
+	// 	w.Write([]byte("token refresh endpoint"))
+	// })
+	// a.s.HandleFunc("/password/forgot", func(w http.ResponseWriter, r *http.Request) {
+	// 	w.Write([]byte("forgot password endpoint"))
+	// })
+	// a.s.HandleFunc("/password/reset", func(w http.ResponseWriter, r *http.Request) {
+	// 	w.Write([]byte("reset password endpoint"))
+	// })
+	// a.s.HandleFunc("/logout", func(w http.ResponseWriter, r *http.Request) {
+	// 	w.Write([]byte("logout endpoint"))
+	// })
 }

@@ -5,6 +5,7 @@ go 1.24.4
 require (
 	github.com/rs/cors v1.11.1
 	github.com/rs/zerolog v1.34.0
+	golang.org/x/crypto v0.40.0
 )
 
 require (
