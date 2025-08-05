@@ -3,22 +3,20 @@ package service
 import (
 	"context"
 	"errors"
-	"os"
 	"testing"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/simt/auth/repo"
 	"github.com/simt/dtacc/model"
-	"github.com/simt/pkg/testingx"
 )
 
-func TestMain(m *testing.M) {
-	if err := testingx.ApplyProjectRootDir(); err != nil {
-		os.Exit(1)
-	}
+// func TestMain(m *testing.M) {
+// 	if err := testingx.ApplyProjectRootDir(); err != nil {
+// 		os.Exit(1)
+// 	}
 
-	os.Exit(m.Run())
-}
+// 	os.Exit(m.Run())
+// }
 
 func TestRegisterService(t *testing.T) {
 	// stub

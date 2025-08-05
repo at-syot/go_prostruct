@@ -10,6 +10,8 @@
 
 - authentication, authorization
 
+- #### integration test at handles layers
+
 - caching
 - long running job (another module ?)
 
