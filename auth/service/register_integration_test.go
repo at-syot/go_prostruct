@@ -34,11 +34,11 @@ func TestMain(m *testing.M) {
 
 func TestRegisterService_Integration(t *testing.T) {
 	// Clean up users table before each test run for isolation
-	_, _ = testDB.NewTruncateTable().Table("users").Cascade().Exec(context.Background())
+	ctx := context.Background()
+	_, _ = testDB.NewTruncateTable().Model((*model.User)(nil)).Cascade().Exec(context.Background())
 
 	sutRepo := repo.NewUserRepository(testDB)
 	sutService := NewRegisterService(sutRepo)
-	ctx := context.Background()
 
 	type expected struct {
 		hasResp bool
@@ -98,7 +98,7 @@ func TestRegisterService_Integration(t *testing.T) {
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			// Clean up before each subtest for isolation
-			_, _ = testDB.NewTruncateTable().Table("users").Cascade().Exec(ctx)
+			_, _ = testDB.NewTruncateTable().Model((*model.User)(nil)).Cascade().Exec(ctx)
 			c.setup()
 			gotResp, gotErr := sutService.Register(ctx, c.req)
 			if !c.expected.errFn(gotErr) {
