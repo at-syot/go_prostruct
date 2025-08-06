@@ -100,6 +100,7 @@ func TestRegisterService_Integration(t *testing.T) {
 			// Clean up before each subtest for isolation
 			_, _ = testDB.NewTruncateTable().Model((*model.User)(nil)).Cascade().Exec(ctx)
 			c.setup()
+
 			gotResp, gotErr := sutService.Register(ctx, c.req)
 			if !c.expected.errFn(gotErr) {
 				t.Errorf("error is not match, got: %v", gotErr)

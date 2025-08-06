@@ -4,9 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"os"
 
-	"github.com/joho/godotenv"
 	"github.com/simt/dtacc/model"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect/pgdialect"
@@ -14,16 +12,7 @@ import (
 	"github.com/uptrace/bun/extra/bundebug"
 )
 
-func NewDB() (*bun.DB, error) {
-	if err := godotenv.Load(".env"); err != nil {
-		return nil, fmt.Errorf("could not load .env file: %w", err)
-	}
-
-	dsn := os.Getenv("DATABASE_URL")
-	if dsn == "" {
-		return nil, fmt.Errorf("DATABASE_URL environment variable is required")
-	}
-
+func NewDB(dsn string) (*bun.DB, error) {
 	sqldb := sql.OpenDB(pgdriver.NewConnector(pgdriver.WithDSN(dsn)))
 	db := bun.NewDB(sqldb, pgdialect.New())
 

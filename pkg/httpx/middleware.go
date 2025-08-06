@@ -1,10 +1,11 @@
 package httpx
 
 import (
-	"github.com/rs/cors"
-	"github.com/rs/zerolog/log"
 	"net/http"
 	"time"
+
+	"github.com/rs/cors"
+	"github.com/rs/zerolog/log"
 )
 
 type MiddlewareChain struct {

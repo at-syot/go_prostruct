@@ -27,10 +27,10 @@ const (
 
 var AppConfigurations Configurations
 
-func LoadConfig() {
+func LoadConfig() error {
 	if err := godotenv.Load(".env"); err != nil {
-		log.Warn().Err(err).Msg("could not load .env file")
-		panic(err)
+		log.Info().Err(err).Msg("could not load .env file, using system environment variables")
+		return err
 	}
 
 	port := os.Getenv("PORT")
@@ -76,4 +76,5 @@ func LoadConfig() {
 	}
 
 	log.Info().Msg("config is loaded")
+	return nil
 }

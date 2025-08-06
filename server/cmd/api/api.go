@@ -16,7 +16,11 @@ import (
 )
 
 func main() {
-	config.LoadConfig()
+	err := config.LoadConfig()
+	if err != nil {
+		panic(err)
+	}
+
 	appEnv := config.AppConfigurations.Env
 	var loggerEnv logger.LogEnv
 	switch appEnv {
