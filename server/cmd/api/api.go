@@ -33,7 +33,7 @@ func main() {
 	}
 	logg := logger.InitLogger(loggerEnv)
 
-	db, err := dtacc.NewDB()
+	db, err := dtacc.NewDB(config.AppConfigurations.DatabaseURL)
 	if err != nil {
 		logg.Fatal().Err(err).Msg("failed to initialize database.")
 	}
